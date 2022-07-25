@@ -40,6 +40,8 @@ func main() {
 	}()
 
 	apiServer := server.NewServer(logger, config, pqStore)
-	apiServer.Start()
+	if err := apiServer.Start(); err != nil {
+		log.Fatal(err)
+	}
 
 }
