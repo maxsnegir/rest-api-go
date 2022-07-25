@@ -1,6 +1,7 @@
 package server
 
 import (
+	"database/sql"
 	"github.com/gorilla/mux"
 	"github.com/maxsnegir/rest-api-go/internal/app/store"
 	"github.com/sirupsen/logrus"
@@ -8,26 +9,39 @@ import (
 )
 
 type apiServer struct {
-	Logger *logrus.Logger
-	Config *Config
-	Store  store.Store
-	Router *mux.Router
+	logger       *logrus.Logger
+	Config       *Config
+	PgConnection *sql.DB
+	UserStore    store.UserStore
+	router       *mux.Router
+}
+
+func (s *apiServer) beforeStart() {
+	userStore := store.NewUserStore(s.PgConnection)
+	s.UserStore = userStore
+
+}
+
+func (s *apiServer) configureRouter() {
+	s.router.HandleFunc("/user/create", s.CreateUser())
 }
 
 func (s *apiServer) Start() error {
-	s.Logger.Infof("Starting server on http://localhost%s", s.Config.Port)
-	err := http.ListenAndServe(s.Config.Port, s.Router)
+	s.beforeStart()
+	s.configureRouter()
+	s.logger.Infof("Starting server on http://localhost%s", s.Config.Port)
+	err := http.ListenAndServe(s.Config.Port, s.router)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func NewServer(logger *logrus.Logger, config *Config, store store.Store) *apiServer {
+func NewServer(logger *logrus.Logger, config *Config, pqStore *sql.DB) *apiServer {
 	return &apiServer{
-		Logger: logger,
-		Config: config,
-		Store:  store,
-		Router: mux.NewRouter(),
+		logger:       logger,
+		Config:       config,
+		PgConnection: pqStore,
+		router:       mux.NewRouter(),
 	}
 }

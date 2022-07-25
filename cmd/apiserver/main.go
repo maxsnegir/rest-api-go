@@ -33,6 +33,7 @@ func main() {
 	if err := pqStore.Connect(); err != nil {
 		log.Fatal(err)
 	}
+
 	logger.Infof("Connect to Postgres")
 	defer func() {
 		if err := pqStore.Close(); err != nil {
@@ -40,7 +41,7 @@ func main() {
 		}
 	}()
 
-	apiServer := server.NewServer(logger, config, pqStore)
+	apiServer := server.NewServer(logger, config, pqStore.Connection)
 	if err := apiServer.Start(); err != nil {
 		log.Fatal(err)
 	}

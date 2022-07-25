@@ -7,7 +7,7 @@ import (
 )
 
 type Store interface {
-	Connect() error
+	Connect() (*sql.DB, error)
 	Close() error
 }
 
@@ -18,16 +18,16 @@ type store struct {
 }
 
 func (s *store) Connect() error {
-	db, err := sql.Open(s.driver, s.dbUrl)
+	connection, err := sql.Open(s.driver, s.dbUrl)
 	if err != nil {
 		return err
 	}
 
-	if err := db.Ping(); err != nil {
+	if err := connection.Ping(); err != nil {
 		return err
 	}
 
-	s.Connection = db
+	s.Connection = connection
 	return nil
 }
 
