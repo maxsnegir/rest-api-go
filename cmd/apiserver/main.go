@@ -24,6 +24,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	logger, err := server.NewLogger(config.LogLevel)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	pqStore := store.NewStore("postgres", config.DatabaseUrl)
 	if err := pqStore.Connect(); err != nil {
 		log.Fatal(err)
@@ -33,5 +38,8 @@ func main() {
 			log.Fatal(err)
 		}
 	}()
+
+	apiServer := server.NewServer(logger, config, pqStore)
+	apiServer.Start()
 
 }

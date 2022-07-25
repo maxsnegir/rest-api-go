@@ -6,6 +6,11 @@ import (
 	_ "github.com/lib/pq"
 )
 
+type Store interface {
+	Connect() error
+	Close() error
+}
+
 type store struct {
 	Connection *sql.DB
 	driver     string
@@ -23,7 +28,6 @@ func (s *store) Connect() error {
 	}
 
 	s.Connection = db
-	fmt.Printf("Сonnected to %s\n", s.driver)
 	return nil
 }
 
