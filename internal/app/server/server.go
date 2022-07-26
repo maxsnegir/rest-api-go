@@ -17,13 +17,13 @@ type apiServer struct {
 }
 
 func (s *apiServer) beforeStart() {
-	userStore := store.NewUserStore(s.PgConnection)
-	s.UserStore = userStore
+	s.UserStore = store.NewUserStore(s.PgConnection)
 
 }
 
 func (s *apiServer) configureRouter() {
-	s.router.HandleFunc("/user/create", s.CreateUser())
+	s.router.Use(loggingMiddleware)
+	s.router.HandleFunc("/user/create", s.CreateUser()).Methods(http.MethodPost)
 }
 
 func (s *apiServer) Start() error {
