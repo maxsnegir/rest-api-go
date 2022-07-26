@@ -2,6 +2,7 @@ package server
 
 import (
 	"database/sql"
+	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/maxsnegir/rest-api-go/internal/app/store"
 	"github.com/sirupsen/logrus"
@@ -21,11 +22,6 @@ func (s *apiServer) beforeStart() {
 
 }
 
-func (s *apiServer) configureRouter() {
-	s.router.Use(loggingMiddleware)
-	s.router.HandleFunc("/user/create", s.CreateUser()).Methods(http.MethodPost)
-}
-
 func (s *apiServer) Start() error {
 	s.beforeStart()
 	s.configureRouter()
@@ -35,6 +31,18 @@ func (s *apiServer) Start() error {
 		return err
 	}
 	return nil
+}
+
+func (s *apiServer) error(w http.ResponseWriter, r *http.Request, code int, err error) {
+	data := map[string]string{"error": err.Error()}
+	s.respond(w, r, code, data)
+}
+
+func (s *apiServer) respond(w http.ResponseWriter, r *http.Request, code int, data interface{}) {
+	w.WriteHeader(code)
+	if data != nil {
+		json.NewEncoder(w).Encode(data)
+	}
 }
 
 func NewServer(logger *logrus.Logger, config *Config, pqStore *sql.DB) *apiServer {

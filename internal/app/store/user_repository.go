@@ -20,13 +20,16 @@ func NewUserStore(connection *sql.DB) *userStore {
 }
 
 func (us *userStore) Create(user *models.User) error {
+	if err := user.Validate(); err != nil {
+		return err
+	}
 	row := us.connection.QueryRow(
 		"INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id",
 		user.Username,
 		user.Email,
 		user.Password,
 	)
-	if err := row.Scan(&user); err != nil {
+	if err := row.Scan(&user.Id); err != nil {
 		return err
 	}
 	return nil
