@@ -3,12 +3,11 @@ package models
 import (
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
-	"github.com/google/uuid"
 	"time"
 )
 
 type User struct {
-	Id        uuid.UUID `json:"id"`
+	Id        string    `json:"id"`
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
 	Password  string    `json:"-"`

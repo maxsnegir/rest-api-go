@@ -3,22 +3,28 @@ package server
 import (
 	"database/sql"
 	"encoding/json"
+	"github.com/go-redis/redis"
 	"github.com/gorilla/mux"
-	"github.com/maxsnegir/rest-api-go/internal/app/store"
+	"github.com/maxsnegir/rest-api-go/internal/app/services"
 	"github.com/sirupsen/logrus"
 	"net/http"
 )
 
 type apiServer struct {
-	logger       *logrus.Logger
-	Config       *Config
+	logger *logrus.Logger
+	Config *Config
+	router *mux.Router
+	// Db connections
 	PgConnection *sql.DB
-	UserStore    store.UserStore
-	router       *mux.Router
+	RedisClient  *redis.Client
+	// Services for work with API
+	UserStore    services.UserStore
+	TokenService *services.TokenService
 }
 
 func (s *apiServer) beforeStart() {
-	s.UserStore = store.NewUserStore(s.PgConnection)
+	s.UserStore = services.NewUserStore(s.PgConnection)
+	s.TokenService = services.NewTokenStore(s.RedisClient)
 
 }
 
@@ -39,17 +45,19 @@ func (s *apiServer) error(w http.ResponseWriter, r *http.Request, code int, err 
 }
 
 func (s *apiServer) respond(w http.ResponseWriter, r *http.Request, code int, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	if data != nil {
 		json.NewEncoder(w).Encode(data)
 	}
 }
 
-func NewServer(logger *logrus.Logger, config *Config, pqStore *sql.DB) *apiServer {
+func NewServer(logger *logrus.Logger, config *Config, pqConnection *sql.DB, redisClient *redis.Client) *apiServer {
 	return &apiServer{
 		logger:       logger,
 		Config:       config,
-		PgConnection: pqStore,
 		router:       mux.NewRouter(),
+		PgConnection: pqConnection,
+		RedisClient:  redisClient,
 	}
 }

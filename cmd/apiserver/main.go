@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"github.com/BurntSushi/toml"
+	"github.com/maxsnegir/rest-api-go/internal/app/db"
 	"github.com/maxsnegir/rest-api-go/internal/app/server"
-	"github.com/maxsnegir/rest-api-go/internal/app/store"
 	"log"
 )
 
@@ -29,7 +29,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	pqStore := store.NewStore("postgres", config.DatabaseUrl)
+	pqStore := db.NewPqStore(config.PostgresDsn)
 	if err := pqStore.Connect(); err != nil {
 		log.Fatal(err)
 	}
@@ -41,7 +41,18 @@ func main() {
 		}
 	}()
 
-	apiServer := server.NewServer(logger, config, pqStore.Connection)
+	redisStore := db.NewRedisStore(config.RedisDsn)
+	if err := redisStore.Connect(); err != nil {
+		log.Fatal(err)
+	}
+	logger.Infof("Connect to Redis")
+	defer func() {
+		if err := redisStore.Close(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	apiServer := server.NewServer(logger, config, pqStore.Connection, redisStore.Client)
 	if err := apiServer.Start(); err != nil {
 		log.Fatal(err)
 	}

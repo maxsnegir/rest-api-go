@@ -1,4 +1,4 @@
-package store
+package services
 
 import (
 	"database/sql"
@@ -9,6 +9,7 @@ type UserStore interface {
 	Create(u *models.User) error
 	Update()
 	Delete()
+	GetByUsername(username string) (*models.User, error)
 }
 
 type userStore struct {
@@ -33,6 +34,24 @@ func (us *userStore) Create(user *models.User) error {
 		return err
 	}
 	return nil
+}
+
+func (us *userStore) GetByUsername(username string) (*models.User, error) {
+	user := &models.User{}
+	err := us.connection.QueryRow(
+		"SELECT id, username, email, password from users WHERE username = $1",
+		username,
+	).Scan(
+		&user.Id,
+		&user.Username,
+		&user.Email,
+		&user.Password,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+
 }
 
 func (us *userStore) Update() {

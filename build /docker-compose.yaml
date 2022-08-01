@@ -14,3 +14,12 @@ services:
     ports:
       - "5439:5432"
 
+  redis:
+    image: redis
+    command:
+      - redis-server
+    env_file:
+      - .env
+    ports:
+      - "6380:6379"
+
